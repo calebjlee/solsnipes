@@ -1,0 +1,15 @@
+{
+  "name": "telegramcryptolookout",
+  "module": "main.js",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "node-telegram-bot-api": "^0.65.1"
+  }
+}
