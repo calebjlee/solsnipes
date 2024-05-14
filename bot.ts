@@ -50,6 +50,7 @@ export class ArbBot {
     private nextTrade: NextTrade;
     private initialPrice: number = 0;
     private waitingForConfirmation: boolean = false;
+    private startTime: number = 0;
 
     constructor(config: ArbBotConfig) {
         const { 
@@ -83,7 +84,8 @@ export class ArbBot {
         await this.refreshBalances();
         console.log(`🏦 Current balances:\nSOL: ${this.solBalance / LAMPORTS_PER_SOL},\nALT: ${this.altBalance}`);
         await this.firstTrade();
-        // await this.setInitialPrice();
+        this.startTime = Date.now();
+        await this.setInitialPrice();
         this.initiatePriceWatch();
     }
 
@@ -170,10 +172,14 @@ export class ArbBot {
         let difference = (parseInt(quote.outAmount) - this.nextTrade.nextTradeThreshold) / this.nextTrade.nextTradeThreshold;
         console.log(`📈 Current price: ${quote.outAmount} is ${difference > 0 ? 'higher' : 'lower'
             } than the next trade threshold: ${this.nextTrade.nextTradeThreshold} by ${Math.abs(difference * 100).toFixed(2)}%.`);
-        if (parseInt(quote.outAmount) > this.nextTrade.nextTradeThreshold) {
+        const curTime = Date.now();
+        // We will wait 60 seconds before executing stop loss
+        const timeBeforeExecuting = 60000;
+        if (parseInt(quote.outAmount) > this.nextTrade.nextTradeThreshold || ((parseInt(quote.outAmount) < this.initialPrice) && curTime - this.startTime > timeBeforeExecuting)) {
             try {
                 this.waitingForConfirmation = true;
                 await this.executeSwap(quote, this.altBalance * Math.pow(10, await this.getTokenDecimals(this.initialAltMint.toBase58())));
+                await this.refreshBalances();
                 this.terminateSession("Successfully Swapped!");
             } catch (error) {
                 console.error('Error executing swap:', error);
