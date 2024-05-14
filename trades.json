@@ -1,0 +1,90 @@
+[
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "10000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "1474690",
+    "txId": "2xqNVYBgUkWzPPPtmgCaDCxgzFJKjeMUApd25VVyTeg55nnkiXwYvcvSeXJzs2z7U4VeGUafAUpUPHTQd2qSN1Xj",
+    "timestamp": "2024-05-13T23:30:23.217Z"
+  },
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "5000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "732900",
+    "txId": "2DX6t17AibDqwNUrVcZ388opDrYKvtRuwqbnztzmnfaMdhaGRdK59pxiwB6TdxetndUgwFBKCiwtmpRBQUwiX8DT",
+    "timestamp": "2024-05-14T00:50:21.879Z"
+  },
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "5000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "733789",
+    "txId": "62ebUhV1vbfarwAnWq1WsqVwf5wSfrWNmMZbdNLvJNV9TTsMYaonvowCVKFpmyNKYMFon3JEaAdB6ojGVDDpdWyv",
+    "timestamp": "2024-05-14T01:08:50.391Z"
+  },
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "5000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "735827",
+    "txId": "TWz2kaZ2fezZFL7h2i3XYrKbxuc4CDB6AWqFgrcWCVZd9YWFJjEdB7UMJS6iCfLKvTQULcJoUYb4j9EDWk5xydG",
+    "timestamp": "2024-05-14T01:12:15.139Z"
+  },
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "5000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "734960",
+    "txId": "3egWn5vNG1FrGHSYXjEo2hM6gW4NQ8SiG5yLCj25ceGAaBoHFgAt9qysPcceQMxwQ5VzHxtTT7pqTFE63K5MGAmm",
+    "timestamp": "2024-05-14T04:51:02.530Z"
+  },
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "5000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "734367",
+    "txId": "5pKfxoFQxvBMucPofqCeuQzeru8GeqvRg4Jo6Xmx624RMXpo3PbgeKFpNZgXBXgwzvT24WDvJhtxK3WXv8MGkwgk",
+    "timestamp": "2024-05-14T04:51:32.026Z"
+  },
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "5000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "733806",
+    "txId": "49C6D3SH2b6VC3NrNYKFmV4YD4mVuDu2jMrp85QvXyrUPgzB4AgSc7nyKsuF4zCtUrZPxs5cvoYbpYte3P4YsP4U",
+    "timestamp": "2024-05-14T04:52:18.886Z"
+  },
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "5000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "734723",
+    "txId": "5sJgLNR17t34dwv5NopWHGPSX9ysno1VoWxMGPjDLFh2pR88K8P62Eubz6V25LgpEpGYZ1buqSQaDsE1uiBJZ22R",
+    "timestamp": "2024-05-14T04:55:18.559Z"
+  },
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "5000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "736076",
+    "txId": "58vn8mUJPXP32s1uE6wjwvwY9VgzCoj2Z8JDKZ7td47HKFpjv7X9Umu5Rybv5yGh1L6rsW7wyiX3rUBR6grP9p53",
+    "timestamp": "2024-05-14T04:58:02.058Z"
+  },
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "5000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "737859",
+    "txId": "C5AoHphaQv1YYTQpLiyg25STkpMzr2MPhk7FXyhkxUvc2KjwLKzcvJABckProdwi2vfJxsFXhAohrwsCBKjGzNA",
+    "timestamp": "2024-05-14T05:04:08.452Z"
+  },
+  {
+    "inputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "inAmount": "8811775",
+    "outputToken": "So11111111111111111111111111111111111111112",
+    "outAmount": "4987407",
+    "txId": "1p9XBHVfUMKn9PCzL6TG46rS8KEC5A3sy45tyuMAqCHs1VwjJRUSJJGrMdTEZQJqAQw1HDFJmR1C6sB8rA7TSHQ",
+    "timestamp": "2024-05-14T05:04:30.391Z"
+  }
+]
