@@ -86,5 +86,13 @@
     "outAmount": "4987407",
     "txId": "1p9XBHVfUMKn9PCzL6TG46rS8KEC5A3sy45tyuMAqCHs1VwjJRUSJJGrMdTEZQJqAQw1HDFJmR1C6sB8rA7TSHQ",
     "timestamp": "2024-05-14T05:04:30.391Z"
+  },
+  {
+    "inputToken": "So11111111111111111111111111111111111111112",
+    "inAmount": "5000000",
+    "outputToken": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "716483",
+    "txId": "2JXpbezee4LFWgCgT2LSYQXimq3pby5NedDrPyJKkZvk5uJBpiWc2yMKiQ7WKeCvDgMsywAiYza3qdJhDXPaVgbg",
+    "timestamp": "2024-05-14T20:33:51.054Z"
   }
 ]

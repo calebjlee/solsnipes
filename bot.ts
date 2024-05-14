@@ -22,6 +22,7 @@ interface ArbBotConfig {
     checkInterval?: number;
     initialInputToken: SwapToken;
     initialInputAmount: number;
+    initialAltMint: PublicKey;
 }
 
 interface NextTrade extends QuoteGetRequest {
@@ -30,18 +31,18 @@ interface NextTrade extends QuoteGetRequest {
 
 export enum SwapToken {
     SOL,
-    USDC
+    ALT
 }
 
 export class ArbBot {
     private solanaConnection: Connection;
     private jupiterApi: DefaultApi;
     private wallet: Keypair;
-    private usdcMint: PublicKey = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
     private solMint: PublicKey = new PublicKey("So11111111111111111111111111111111111111112");
-    private usdcTokenAccount: PublicKey;
+    private initialAltMint: PublicKey;
+    private altTokenAccount: PublicKey;
     private solBalance: number = 0;
-    private usdcBalance: number = 0;
+    private altBalance: number = 0;
     private checkInterval: number = 1000; 
     private lastCheck: number = 0;
     private priceWatchIntervalId?: NodeJS.Timeout;
@@ -59,17 +60,19 @@ export class ArbBot {
             checkInterval,
             initialInputToken,
             initialInputAmount,
+            initialAltMint,
             firstTradePrice
         } = config;
         this.solanaConnection = new Connection(solanaEndpoint);
         this.jupiterApi = createJupiterApiClient({ basePath: metisEndpoint });
         this.wallet = Keypair.fromSecretKey(secretKey);
-        this.usdcTokenAccount = getAssociatedTokenAddressSync(this.usdcMint, this.wallet.publicKey);
+        this.altTokenAccount = getAssociatedTokenAddressSync(initialAltMint, this.wallet.publicKey);
+        this.initialAltMint = initialAltMint;
         if (targetGainPercentage) { this.targetGainPercentage = targetGainPercentage }
         if (checkInterval) { this.checkInterval = checkInterval }
         this.nextTrade = {
-            inputMint: initialInputToken === SwapToken.SOL ? this.solMint.toBase58() : this.usdcMint.toBase58(),
-            outputMint: initialInputToken === SwapToken.SOL ? this.usdcMint.toBase58() : this.solMint.toBase58(),
+            inputMint: initialInputToken === SwapToken.SOL ? this.solMint.toBase58() : initialAltMint.toBase58(),
+            outputMint: initialInputToken === SwapToken.SOL ? initialAltMint.toBase58() : this.solMint.toBase58(),
             amount: initialInputAmount,
             nextTradeThreshold: firstTradePrice,
         };
@@ -78,7 +81,7 @@ export class ArbBot {
     async init(): Promise<void> {
         console.log(`🤖 Initiating arb bot for wallet: ${this.wallet.publicKey.toBase58()}.`)
         await this.refreshBalances();
-        console.log(`🏦 Current balances:\nSOL: ${this.solBalance / LAMPORTS_PER_SOL},\nUSDC: ${this.usdcBalance}`);
+        console.log(`🏦 Current balances:\nSOL: ${this.solBalance / LAMPORTS_PER_SOL},\nALT: ${this.altBalance}`);
         await this.firstTrade();
         // await this.setInitialPrice();
         this.initiatePriceWatch();
@@ -170,7 +173,7 @@ export class ArbBot {
         if (parseInt(quote.outAmount) > this.nextTrade.nextTradeThreshold) {
             try {
                 this.waitingForConfirmation = true;
-                await this.executeSwap(quote, this.usdcBalance * Math.pow(10, await this.getTokenDecimals(this.usdcMint.toBase58())));
+                await this.executeSwap(quote, this.altBalance * Math.pow(10, await this.getTokenDecimals(this.initialAltMint.toBase58())));
                 this.terminateSession("Successfully Swapped!");
             } catch (error) {
                 console.error('Error executing swap:', error);
@@ -268,11 +271,11 @@ export class ArbBot {
         try {
             const results = await Promise.allSettled([
                 this.solanaConnection.getBalance(this.wallet.publicKey),
-                this.solanaConnection.getTokenAccountBalance(this.usdcTokenAccount)
+                this.solanaConnection.getTokenAccountBalance(this.altTokenAccount)
             ]);
 
             const solBalanceResult = results[0];
-            const usdcBalanceResult = results[1];
+            const altBalanceResult = results[1];
 
             if (solBalanceResult.status === 'fulfilled') {
                 this.solBalance = solBalanceResult.value;
@@ -280,10 +283,10 @@ export class ArbBot {
                 console.error('Error fetching SOL balance:', solBalanceResult.reason);
             }
 
-            if (usdcBalanceResult.status === 'fulfilled') {
-                this.usdcBalance = usdcBalanceResult.value.value.uiAmount ?? 0;
+            if (altBalanceResult.status === 'fulfilled') {
+                this.altBalance = altBalanceResult.value.value.uiAmount ?? 0;
             } else {
-                this.usdcBalance = 0;
+                this.altBalance = 0;
             }
 
             if (this.solBalance < LAMPORTS_PER_SOL / 1000) {
@@ -335,7 +338,7 @@ export class ArbBot {
 
     private terminateSession(reason: string): void {
         console.warn(`❌ Terminating bot...${reason}`);
-        console.log(`Current balances:\nSOL: ${this.solBalance / LAMPORTS_PER_SOL},\nUSDC: ${this.usdcBalance}`);
+        console.log(`Current balances:\nSOL: ${this.solBalance / LAMPORTS_PER_SOL},\nALT: ${this.altBalance}`);
         if (this.priceWatchIntervalId) {
             clearInterval(this.priceWatchIntervalId);
             this.priceWatchIntervalId = undefined; // Clear the reference to the interval
