@@ -10,8 +10,10 @@ const ollama = new Ollama(); //start ollama server
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {polling: true});
 
+const { runTrader } = require('./trader');
+
 //state data
-let currCoin = "NA"
+let currCoin = "NA";
 
 // Listen for any kind of message.
 bot.on('message', async (msg) => {
@@ -47,5 +49,6 @@ bot.on('message', async (msg) => {
 
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, finalMsg);
+    runTrader(finalMsg + "/SOL").catch(console.error);
     console.log("Sent response.");
 });

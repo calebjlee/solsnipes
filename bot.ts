@@ -130,7 +130,7 @@ export class ArbBot {
                     console.error('Error getting quote:', error);
                 }
             }
-        }, this.checkInterval);
+        }, this.checkInterval) as NodeJS.Timeout;
     }
 
     private async executeTrade(quote: QuoteResponse): Promise<void> {
@@ -173,8 +173,8 @@ export class ArbBot {
         console.log(`📈 Current price: ${quote.outAmount} is ${difference > 0 ? 'higher' : 'lower'
             } than the next trade threshold: ${this.nextTrade.nextTradeThreshold} by ${Math.abs(difference * 100).toFixed(2)}%.`);
         const curTime = Date.now();
-        // We will wait 60 seconds before executing stop loss
-        const timeBeforeExecuting = 60000;
+        // We will wait 75 seconds before executing stop loss
+        const timeBeforeExecuting = 75000;
         if (parseInt(quote.outAmount) > this.nextTrade.nextTradeThreshold || ((parseInt(quote.outAmount) < this.initialPrice) && curTime - this.startTime > timeBeforeExecuting)) {
             try {
                 this.waitingForConfirmation = true;
