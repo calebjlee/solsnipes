@@ -24,7 +24,7 @@ async function start(initialAltMint: string) {
         metisEndpoint: process.env.METIS_ENDPOINT ?? defaultConfig.jupiter,
         secretKey: decodedSecretKey,
         firstTradePrice: 0 * LAMPORTS_PER_SOL,
-        targetGainPercentage: -5, //Adjust this to how much profit we want to take i. e. 50 = 50% profit
+        targetGainPercentage: 20, //Adjust this to how much profit we want to take i. e. 50 = 50% profit
         initialInputToken: SwapToken.SOL,
         initialInputAmount: 0.005 * LAMPORTS_PER_SOL, // Adjust this to how much sol we want to initially invest. 0.005 = 0.005 SOL
         initialAltMint: new PublicKey(initialAltMint),
