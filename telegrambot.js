@@ -28,26 +28,28 @@ bot.on('message', async (msg) => {
     if (msg?.text || msg?.caption){
         let text = msg?.text ? msg.text : msg.caption;
         if (msg?.reply_to_message){
-            text = msg.reply_to_message.text + text; //Add original message if replying to earlier thing
+            text = "Original Message:\n" + msg.reply_to_message.text + "\nNew Update:\n" + text; //Add original message if replying to earlier thing
         }
-        console.log("RAW MESSAGE:\n" + text);
         let p1 = ollama.chat({
             model: 'phi3-coin-name', //use tiny model for higher tokens/sec
-            messages: [{ role: 'user', content: `MESSAGE: ${text}\nOUTPUT: `}],
+            messages: [{ role: 'user', content: `MESSAGE: ${text}\nTHE COIN NAME IS: `}],
             keep_alive: -1,
         });
     
         let p2 = ollama.chat({
             model: 'phi3-decision',
-            messages: [{ role: 'user', content: `MESSAGE: ${text}\nOUTPUT: `}],
+           messages: [{ role: 'user', content: `MESSAGE: ${text}\nOUTPUT: `}],
             keep_alive: -1,
         }); 
     
         console.time("AI Part");
         let raw_results = await Promise.all([p1, p2]);
         console.timeEnd("AI Part");
-        latest_data.token_name = raw_results[0].message.content;
+        latest_data.token_name = raw_results[0].message.content.replace(/\$/g, "");
         latest_data.buy = (raw_results[1].message.content.trim() == "BUY");
+        // console.log("AI Parsed:")
+        // console.log("TOKEN: ", latest_data.token_name);
+        // console.log("BUY? ", latest_data.buy);
     }
     
     //let imageExists = (msg?.photo) ? true : false; 
