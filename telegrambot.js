@@ -45,11 +45,11 @@ bot.on('message', async (msg) => {
         console.time("AI Part");
         let raw_results = await Promise.all([p1, p2]);
         console.timeEnd("AI Part");
-        latest_data.token_name = raw_results[0].message.content.replace(/\$/g, "");
+        latest_data.token_name = raw_results[0].message.content.toUpperCase().replace(/\$/g, "").replace(/\-/g, "").replace(/COIN/g, "");
         latest_data.buy = (raw_results[1].message.content.trim() == "BUY");
-        // console.log("AI Parsed:")
-        // console.log("TOKEN: ", latest_data.token_name);
-        // console.log("BUY? ", latest_data.buy);
+        console.log("AI Parsed:")
+        console.log("TOKEN: ", latest_data.token_name);
+        console.log("BUY? ", latest_data.buy);
     }
     
     //let imageExists = (msg?.photo) ? true : false; 
@@ -57,7 +57,7 @@ bot.on('message', async (msg) => {
 
     if (latest_data?.buy && latest_data?.token_name){
         console.log("Attempting to trade: " + latest_data.token_name);
-        runTrader(latest_data.token_name + "/SOL").catch(console.error);
+        //runTrader(latest_data.token_name + "/SOL").catch(console.error);
     }
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, "DONE");
