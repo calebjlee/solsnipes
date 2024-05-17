@@ -64,7 +64,7 @@ function start(initialAltMint) {
                         metisEndpoint: (_b = process.env.METIS_ENDPOINT) !== null && _b !== void 0 ? _b : defaultConfig.jupiter,
                         secretKey: decodedSecretKey,
                         firstTradePrice: 0 * web3_js_1.LAMPORTS_PER_SOL,
-                        targetGainPercentage: 50, //Adjust this to how much profit we want to take i. e. 50 = 50% profit
+                        targetGainPercentage: 20, //Adjust this to how much profit we want to take i. e. 50 = 50% profit
                         initialInputToken: bot_1.SwapToken.SOL,
                         initialInputAmount: 0.005 * web3_js_1.LAMPORTS_PER_SOL, // Adjust this to how much sol we want to initially invest. 0.005 = 0.005 SOL
                         initialAltMint: new web3_js_1.PublicKey(initialAltMint),
