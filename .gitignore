@@ -177,3 +177,6 @@ dist
 .env
 
 solsnipes.pem
+
+/venv
+venv
