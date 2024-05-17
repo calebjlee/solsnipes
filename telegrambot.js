@@ -1,4 +1,4 @@
-import 'dotenv/config'; //initialize environment variables from .env file
+const dotenv = require('dotenv'); // Environment variables
 const TelegramBot = require('node-telegram-bot-api'); //Telegram API wrapper
 import { Ollama } from 'ollama' //Lets you run local LLMs easily: https://ollama.com/
 
@@ -17,10 +17,16 @@ const token = process.env.TELEGRAM_SECRET;
 
 const ollama = new Ollama(); //start ollama server
 
-// Create a bot that uses 'polling' to fetch new updates
-const bot = new TelegramBot(token, {polling: true});
+const Promise = require('bluebird');
+    Promise.config({
+        cancellation: true
+    });
+    // Create a bot that uses 'polling' to fetch new updates
+    const bot = new TelegramBot(token, {polling: true});
 
 const { runTrader } = require('./trader');
+
+console.log("Bot is running...");
 
 // Listen for any kind of message.
 bot.on('message', async (msg) => {
@@ -97,7 +103,7 @@ bot.on('message', async (msg) => {
 
     if (latest_data?.buy && latest_data?.token_name){
         console.log("Attempting to trade: " + latest_data.token_name);
-        //runTrader(latest_data.token_name + "/SOL").catch(console.error);
+        runTrader(latest_data.token_name + "/SOL").catch(console.error);
     }
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, "DONE");

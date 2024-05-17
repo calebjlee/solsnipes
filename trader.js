@@ -1,5 +1,4 @@
-const { start } = require('./index.ts');
-
+const { start } = require('./dist/index'); // Ensure index file is in the same directory
 const axios = require('axios');
 
 async function getMintAddress(tokenSymbol) {
@@ -8,6 +7,7 @@ async function getMintAddress(tokenSymbol) {
 
         // Adjust the path based on the actual structure of the API response
         const mintAddress = response.data.pairs[0].baseToken.address;
+        console.log("Success! mint address is: ", mintAddress);
         return mintAddress;
         
         // return mintAddress.pairAddress;
