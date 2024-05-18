@@ -1,6 +1,7 @@
 const dotenv = require('dotenv'); // Environment variables
 const TelegramBot = require('node-telegram-bot-api'); //Telegram API wrapper
-import { Ollama } from 'ollama' //Lets you run local LLMs easily: https://ollama.com/
+
+dotenv.config();
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -14,8 +15,6 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest"});
 
 // Telegram token from environment variables
 const token = process.env.TELEGRAM_SECRET;
-
-const ollama = new Ollama(); //start ollama server
 
 const Promise = require('bluebird');
     Promise.config({
