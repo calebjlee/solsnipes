@@ -25,23 +25,25 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest", safet
 ]});
 
 // Telegram token from environment variables
-const token = process.env.TELEGRAM_SECRET;
+const token = process.env.TELEGRAM_ALT_SECRET;
 
 const debug = (Bun.argv.indexOf("--debug") >= 0);
 const trade = (Bun.argv.indexOf("--trade") >= 0);
 
 const Promise = require('bluebird');
-    Promise.config({
-        cancellation: true
-    });
-    // Create a bot that uses 'polling' to fetch new updates
-    const bot = new TelegramBot(token, {polling: true});
+Promise.config({
+    cancellation: true
+});
+// Create a bot that uses 'polling' to fetch new updates
+const bot = new TelegramBot(token, {polling: true});
+
 
 const { runTrader } = require('./trader');
 
 console.log("Bot is running...");
 
 //main bot logic for reading messages and trading on them
+
 async function handleMessage(msg){
     if (debug)
     console.log("Received Message...");
@@ -123,6 +125,7 @@ async function handleMessage(msg){
     bot.sendMessage(chatId, "DONE");
     if (debug) console.log("Finished reacting to message.")
 }
+
 
 // Listen for any kind of message (not channels, but DMs)
 bot.on('message', (msg) => {
