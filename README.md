@@ -1,13 +1,7 @@
 # telegramcryptolookout
 
-Dependencies needed:
-- bun (or node js) https://bun.sh
-- Ollama https://ollama.ai
-- In ollama, install gemma-2b:instruct and phi3:instruct
-- use command below for all modelfiles to get those settings working (current code uses names phi3-coin-name and phi3-decision from those respective modelfiles)
-```bash
-ollama create <name> -f <path>
-```
+Javascript Runtime needed:
+- bun https://bun.sh
 
 To install JS dependencies:
 
@@ -15,10 +9,13 @@ To install JS dependencies:
 bun install
 ```
 
-To run:
+To run (with real trading):
 
 ```bash
-bun main.js
+bun telegrambot.js --trade
 ```
 
-This project was created using `bun init` in bun v1.0.5. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+Settings:
+--trade: Allows the bot to actually trade the coins
+--debug: Turns on additional logging for verifying that everything is working.
+

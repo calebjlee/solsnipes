@@ -1,4 +1,4 @@
-const { start } = require('./dist/index'); // Ensure index file is in the same directory
+const { start } = require('./index'); // Ensure index file is in the same directory
 const axios = require('axios');
 
 async function getMintAddress(tokenSymbol) {
