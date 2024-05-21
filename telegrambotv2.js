@@ -188,25 +188,3 @@ async function main(){
 }
 
 main();
-
-//IN CASE YOU NEED NEW SESSION
-//import readline from "readline";
-// const rl = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-// });
-// await client.start({
-  //   phoneNumber: async () =>
-  //     new Promise((resolve) =>
-  //       rl.question("Please enter your number: ", resolve)
-  //     ),
-  //   password: async () =>
-  //     new Promise((resolve) =>
-  //       rl.question("Please enter your password: ", resolve)
-  //     ),
-  //   phoneCode: async () =>
-  //     new Promise((resolve) =>
-  //       rl.question("Please enter the code you received: ", resolve)
-  //     ),
-  //   onError: (err) => console.log(err),
-  // });
