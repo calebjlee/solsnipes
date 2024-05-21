@@ -339,7 +339,6 @@ export class ArbBot {
             amount: parseInt(lastTrade.outAmount),
             nextTradeThreshold: this.initialPrice * (1 + priceChange),
         };
-        console.log(`🔄 Updated next trade: ${this.nextTrade.inputMint} -> ${this.nextTrade.outputMint},\n  Amount: ${this.nextTrade.amount},\n  Threshold: ${this.nextTrade.nextTradeThreshold}`);
         this.setInitialPrice();
     }
 

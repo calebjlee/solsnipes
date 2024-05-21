@@ -1,6 +1,8 @@
 const dotenv = require('dotenv'); // Environment variables
 const {Api} = require('telegram');
 
+dotenv.config();
+
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 import { createClient } from 'redis';
@@ -32,7 +34,7 @@ const apiHash = process.env.API_HASH;
 const stringSession = new StringSession(process.env.TELEGRAM_SESSION);
 
 const CHECK_FREQUENCY = 5000; //how often to see if there is a new message (milliseconds)
-const TARGET_CHAT_ID = -1002138178253;
+const TARGET_CHAT_ID = -1002094405795;
 //Lyxe Calls ID: -1002138178253
 //Testing Channel ID: -1002094405795;
 
