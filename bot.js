@@ -117,7 +117,6 @@ var ArbBot = /** @class */ (function () {
                     case 0:
                         _a.trys.push([0, 3, , 4]);
                         if (this.waitingForConfirmation) {
-                            console.log('Waiting for previous transaction to confirm...');
                             return [2 /*return*/];
                         }
                         return [4 /*yield*/, this.getQuote(this.nextTrade)];
@@ -174,7 +173,6 @@ var ArbBot = /** @class */ (function () {
                     case 1:
                         _a.trys.push([1, 3, , 4]);
                         if (this.waitingForConfirmation) {
-                            console.log('Waiting for previous transaction to confirm...');
                             return [2 /*return*/];
                         }
                         return [4 /*yield*/, this.getQuote(this.nextTrade)];
@@ -267,16 +265,16 @@ var ArbBot = /** @class */ (function () {
                     case 1:
                         _g.trys.push([1, 5, , 6]);
                         this.waitingForConfirmation = true;
+                        return [4 /*yield*/, this.refreshBalances()];
+                    case 2:
+                        _g.sent();
                         _a = this.executeSwap;
                         _b = [quote];
                         _c = this.altBalance;
                         _e = (_d = Math).pow;
                         _f = [10];
                         return [4 /*yield*/, this.getTokenDecimals(this.initialAltMint.toBase58())];
-                    case 2: return [4 /*yield*/, _a.apply(this, _b.concat([_c * _e.apply(_d, _f.concat([_g.sent()]))]))];
-                    case 3:
-                        _g.sent();
-                        return [4 /*yield*/, this.refreshBalances()];
+                    case 3: return [4 /*yield*/, _a.apply(this, _b.concat([_c * _e.apply(_d, _f.concat([_g.sent()]))]))];
                     case 4:
                         _g.sent();
                         this.terminateSession("Successfully Swapped!");
@@ -292,11 +290,11 @@ var ArbBot = /** @class */ (function () {
     };
     ArbBot.prototype.executeSwap = function (route, customAmount) {
         return __awaiter(this, void 0, void 0, function () {
-            var roundedAmount, _a, computeBudgetInstructions, setupInstructions, swapInstruction, cleanupInstruction, addressLookupTableAddresses, instructions, addressLookupTableAccounts, _b, blockhash, lastValidBlockHeight, messageV0, transaction, rawTransaction, txid, confirmation, error_6, _c, _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var roundedAmount, inputMint, outputMint, inputTokenBalance, solBalance, inputTokenAccount, _a, computeBudgetInstructions, setupInstructions, swapInstruction, cleanupInstruction, addressLookupTableAddresses, instructions, addressLookupTableAccounts, _b, blockhash, lastValidBlockHeight, messageV0, transaction, rawTransaction, txid, confirmation, error_6, _c, _d, _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
                     case 0:
-                        _e.trys.push([0, 7, 11, 12]);
+                        _f.trys.push([0, 13, 17, 18]);
                         roundedAmount = Math.round(customAmount);
                         if (!Number.isInteger(roundedAmount) || roundedAmount <= 0) {
                             throw new Error('Invalid custom amount');
@@ -304,25 +302,62 @@ var ArbBot = /** @class */ (function () {
                         // Convert the rounded amount to string and assign to route
                         route.inAmount = roundedAmount.toString();
                         console.log("Executing swap with amount: ".concat(route.inAmount));
+                        inputMint = new web3_js_1.PublicKey(route.inputMint);
+                        outputMint = new web3_js_1.PublicKey(route.outputMint);
+                        // Ensure the associated token account for the output mint exists
+                        return [4 /*yield*/, this.createTokenAccountIfMissing(this.wallet.publicKey, outputMint)];
+                    case 1:
+                        // Ensure the associated token account for the output mint exists
+                        _f.sent();
+                        inputTokenBalance = 0;
+                        if (!inputMint.equals(this.solMint)) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.getSolBalance(this.wallet.publicKey)];
+                    case 2:
+                        solBalance = _f.sent();
+                        console.log("SOL Balance: ".concat(solBalance / web3_js_1.LAMPORTS_PER_SOL, " SOL"));
+                        if (solBalance < roundedAmount) {
+                            console.error("Insufficient SOL for the swap. Required: ".concat(roundedAmount, ", Available: ").concat(solBalance));
+                            throw new Error("Insufficient SOL for the swap. Required: ".concat(roundedAmount, ", Available: ").concat(solBalance));
+                        }
+                        inputTokenBalance = solBalance;
+                        return [3 /*break*/, 6];
+                    case 3: return [4 /*yield*/, this.getAssociatedTokenAccount(this.wallet.publicKey, inputMint)];
+                    case 4:
+                        inputTokenAccount = _f.sent();
+                        return [4 /*yield*/, this.getTokenBalance(inputTokenAccount)];
+                    case 5:
+                        inputTokenBalance = _f.sent();
+                        console.log("Input Token Balance for mint ".concat(inputMint.toBase58(), ": ").concat(inputTokenBalance));
+                        if (inputTokenBalance < roundedAmount) {
+                            console.error("Insufficient funds for the swap. Required: ".concat(roundedAmount, ", Available: ").concat(inputTokenBalance));
+                            throw new Error("Insufficient funds for the swap. Required: ".concat(roundedAmount, ", Available: ").concat(inputTokenBalance));
+                        }
+                        _f.label = 6;
+                    case 6:
+                        // Log input and output details
+                        console.log("Input Mint: ".concat(inputMint.toBase58()));
+                        console.log("Output Mint: ".concat(outputMint.toBase58()));
+                        console.log("Input Token Balance: ".concat(inputTokenBalance));
+                        console.log("Rounded Amount: ".concat(roundedAmount));
                         return [4 /*yield*/, this.jupiterApi.swapInstructionsPost({
                                 swapRequest: {
                                     quoteResponse: route,
                                     userPublicKey: this.wallet.publicKey.toBase58(),
-                                    prioritizationFeeLamports: 'auto'
+                                    prioritizationFeeLamports: 'auto',
                                 },
                             })];
-                    case 1:
-                        _a = _e.sent(), computeBudgetInstructions = _a.computeBudgetInstructions, setupInstructions = _a.setupInstructions, swapInstruction = _a.swapInstruction, cleanupInstruction = _a.cleanupInstruction, addressLookupTableAddresses = _a.addressLookupTableAddresses;
+                    case 7:
+                        _a = _f.sent(), computeBudgetInstructions = _a.computeBudgetInstructions, setupInstructions = _a.setupInstructions, swapInstruction = _a.swapInstruction, cleanupInstruction = _a.cleanupInstruction, addressLookupTableAddresses = _a.addressLookupTableAddresses;
                         instructions = __spreadArray(__spreadArray(__spreadArray([], computeBudgetInstructions.map(this.instructionDataToTransactionInstruction), true), setupInstructions.map(this.instructionDataToTransactionInstruction), true), [
                             this.instructionDataToTransactionInstruction(swapInstruction),
                             this.instructionDataToTransactionInstruction(cleanupInstruction),
                         ], false).filter(function (ix) { return ix !== null; });
-                        return [4 /*yield*/, this.getAdressLookupTableAccounts(addressLookupTableAddresses, this.solanaConnection)];
-                    case 2:
-                        addressLookupTableAccounts = _e.sent();
+                        return [4 /*yield*/, this.getAddressLookupTableAccounts(addressLookupTableAddresses, this.solanaConnection)];
+                    case 8:
+                        addressLookupTableAccounts = _f.sent();
                         return [4 /*yield*/, this.solanaConnection.getLatestBlockhash()];
-                    case 3:
-                        _b = _e.sent(), blockhash = _b.blockhash, lastValidBlockHeight = _b.lastValidBlockHeight;
+                    case 9:
+                        _b = _f.sent(), blockhash = _b.blockhash, lastValidBlockHeight = _b.lastValidBlockHeight;
                         messageV0 = new web3_js_1.TransactionMessage({
                             payerKey: this.wallet.publicKey,
                             recentBlockhash: blockhash,
@@ -333,36 +368,40 @@ var ArbBot = /** @class */ (function () {
                         rawTransaction = transaction.serialize();
                         return [4 /*yield*/, this.solanaConnection.sendRawTransaction(rawTransaction, {
                                 skipPreflight: true,
-                                maxRetries: 2
+                                maxRetries: 2,
                             })];
-                    case 4:
-                        txid = _e.sent();
+                    case 10:
+                        txid = _f.sent();
                         return [4 /*yield*/, this.solanaConnection.confirmTransaction({ signature: txid, blockhash: blockhash, lastValidBlockHeight: lastValidBlockHeight }, 'confirmed')];
-                    case 5:
-                        confirmation = _e.sent();
+                    case 11:
+                        confirmation = _f.sent();
                         if (confirmation.value.err) {
                             console.error('Transaction confirmation error:', confirmation.value.err);
-                            throw new Error('Transaction failed');
+                            throw new Error("Transaction failed with error: ".concat(JSON.stringify(confirmation.value.err)));
                         }
                         return [4 /*yield*/, this.postTransactionProcessing(route, txid)];
-                    case 6:
-                        _e.sent();
-                        return [3 /*break*/, 12];
-                    case 7:
-                        error_6 = _e.sent();
-                        if (!(error_6 instanceof api_1.ResponseError)) return [3 /*break*/, 9];
-                        _d = (_c = console).log;
+                    case 12:
+                        _f.sent();
+                        return [3 /*break*/, 18];
+                    case 13:
+                        error_6 = _f.sent();
+                        if (!(error_6 instanceof api_1.ResponseError)) return [3 /*break*/, 15];
+                        _d = (_c = console).error;
+                        _e = ['Response error:'];
                         return [4 /*yield*/, error_6.response.json()];
-                    case 8:
-                        _d.apply(_c, [_e.sent()]);
-                        return [3 /*break*/, 10];
-                    case 9:
+                    case 14:
+                        _d.apply(_c, _e.concat([_f.sent()]));
+                        return [3 /*break*/, 16];
+                    case 15:
                         if (error_6 instanceof Error) {
                             if (error_6.message.includes('Invalid custom amount')) {
                                 console.error('Custom amount error:', error_6.message);
                             }
                             else if (error_6.message.includes('Transaction failed')) {
                                 console.error('Transaction execution error:', error_6.message);
+                                if (error_6.message.includes('6018')) {
+                                    console.error('Custom error 6018: Insufficient funds for the swap');
+                                }
                             }
                             else {
                                 console.error('Error during swap execution:', error_6);
@@ -371,19 +410,161 @@ var ArbBot = /** @class */ (function () {
                         else {
                             console.error('Unexpected error:', error_6);
                         }
-                        _e.label = 10;
-                    case 10: throw new Error('Unable to execute swap');
-                    case 11:
+                        _f.label = 16;
+                    case 16: throw new Error('Unable to execute swap');
+                    case 17:
                         this.waitingForConfirmation = false;
                         return [7 /*endfinally*/];
-                    case 12: return [2 /*return*/];
+                    case 18: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ArbBot.prototype.createTokenAccountIfMissing = function (walletPublicKey, mint) {
+        return __awaiter(this, void 0, void 0, function () {
+            var tokenAccount, tokenAccountInfo, transaction;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getAssociatedTokenAccount(walletPublicKey, mint)];
+                    case 1:
+                        tokenAccount = _a.sent();
+                        return [4 /*yield*/, this.solanaConnection.getParsedAccountInfo(tokenAccount)];
+                    case 2:
+                        tokenAccountInfo = _a.sent();
+                        if (!!tokenAccountInfo.value) return [3 /*break*/, 4];
+                        console.log("Creating associated token account for mint ".concat(mint.toBase58()));
+                        transaction = new web3_js_1.Transaction().add((0, spl_token_1.createAssociatedTokenAccountInstruction)(walletPublicKey, tokenAccount, walletPublicKey, mint, spl_token_1.TOKEN_PROGRAM_ID, spl_token_1.ASSOCIATED_TOKEN_PROGRAM_ID));
+                        return [4 /*yield*/, this.sendTransaction(transaction)];
+                    case 3:
+                        _a.sent();
+                        return [3 /*break*/, 5];
+                    case 4:
+                        console.log("Associated token account already exists for mint ".concat(mint.toBase58()));
+                        _a.label = 5;
+                    case 5: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ArbBot.prototype.sendTransaction = function (transaction) {
+        return __awaiter(this, void 0, void 0, function () {
+            var blockhash, signature;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.solanaConnection.getRecentBlockhash()];
+                    case 1:
+                        blockhash = (_a.sent()).blockhash;
+                        transaction.recentBlockhash = blockhash;
+                        transaction.feePayer = this.wallet.publicKey;
+                        transaction.sign(this.wallet);
+                        return [4 /*yield*/, this.solanaConnection.sendRawTransaction(transaction.serialize())];
+                    case 2:
+                        signature = _a.sent();
+                        return [4 /*yield*/, this.solanaConnection.confirmTransaction(signature, 'singleGossip')];
+                    case 3:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ArbBot.prototype.getSolBalance = function (walletPublicKey) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.solanaConnection.getBalance(walletPublicKey)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    ArbBot.prototype.getAssociatedTokenAccount = function (walletPublicKey, mint) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, (0, spl_token_1.getAssociatedTokenAddressSync)(mint, walletPublicKey)];
+            });
+        });
+    };
+    ArbBot.prototype.getTokenBalance = function (tokenAccount) {
+        return __awaiter(this, void 0, void 0, function () {
+            var tokenAccountInfo, error_7;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, (0, spl_token_1.getAccount)(this.solanaConnection, tokenAccount)];
+                    case 1:
+                        tokenAccountInfo = _a.sent();
+                        return [2 /*return*/, Number(tokenAccountInfo.amount)]; // Adjust if you need decimals based on token type
+                    case 2:
+                        error_7 = _a.sent();
+                        console.error('Error fetching token balance:', error_7);
+                        return [2 /*return*/, 0];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ArbBot.prototype.instructionDataToTransactionInstruction = function (instruction) {
+        if (instruction === null || instruction === undefined)
+            return null;
+        return new web3_js_1.TransactionInstruction({
+            programId: new web3_js_1.PublicKey(instruction.programId),
+            keys: instruction.accounts.map(function (key) { return ({
+                pubkey: new web3_js_1.PublicKey(key.pubkey),
+                isSigner: key.isSigner,
+                isWritable: key.isWritable,
+            }); }),
+            data: Buffer.from(instruction.data, 'base64'),
+        });
+    };
+    ArbBot.prototype.getAddressLookupTableAccounts = function (keys, connection) {
+        return __awaiter(this, void 0, void 0, function () {
+            var addressLookupTableAccountInfos;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, connection.getMultipleAccountsInfo(keys.map(function (key) { return new web3_js_1.PublicKey(key); }))];
+                    case 1:
+                        addressLookupTableAccountInfos = _a.sent();
+                        return [2 /*return*/, addressLookupTableAccountInfos.reduce(function (acc, accountInfo, index) {
+                                var addressLookupTableAddress = keys[index];
+                                if (accountInfo) {
+                                    var addressLookupTableAccount = new web3_js_1.AddressLookupTableAccount({
+                                        key: new web3_js_1.PublicKey(addressLookupTableAddress),
+                                        state: web3_js_1.AddressLookupTableAccount.deserialize(accountInfo.data),
+                                    });
+                                    acc.push(addressLookupTableAccount);
+                                }
+                                return acc;
+                            }, new Array())];
+                }
+            });
+        });
+    };
+    ArbBot.prototype.postTransactionProcessing = function (route, txid) {
+        return __awaiter(this, void 0, void 0, function () {
+            var inputMint, inAmount, outputMint, outAmount;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        inputMint = route.inputMint, inAmount = route.inAmount, outputMint = route.outputMint, outAmount = route.outAmount;
+                        return [4 /*yield*/, this.updateNextTrade(route)];
+                    case 1:
+                        _a.sent();
+                        return [4 /*yield*/, this.refreshBalances()];
+                    case 2:
+                        _a.sent();
+                        return [4 /*yield*/, this.logSwap({ inputToken: inputMint, inAmount: inAmount, outputToken: outputMint, outAmount: outAmount, txId: txid, timestamp: new Date().toISOString() })];
+                    case 3:
+                        _a.sent();
+                        return [2 /*return*/];
                 }
             });
         });
     };
     ArbBot.prototype.refreshBalances = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var results, solBalanceResult, altBalanceResult, error_7;
+            var results, solBalanceResult, altBalanceResult, error_8;
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -414,8 +595,8 @@ var ArbBot = /** @class */ (function () {
                         }
                         return [3 /*break*/, 3];
                     case 2:
-                        error_7 = _b.sent();
-                        console.error('Unexpected error during balance refresh:', error_7);
+                        error_8 = _b.sent();
+                        console.error('Unexpected error during balance refresh:', error_8);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -483,20 +664,6 @@ var ArbBot = /** @class */ (function () {
             process.exit(1);
         }, 1000);
     };
-    ArbBot.prototype.instructionDataToTransactionInstruction = function (instruction) {
-        if (instruction === null || instruction === undefined)
-            return null;
-        return new web3_js_1.TransactionInstruction({
-            programId: new web3_js_1.PublicKey(instruction.programId),
-            keys: instruction.accounts.map(function (key) { return ({
-                pubkey: new web3_js_1.PublicKey(key.pubkey),
-                isSigner: key.isSigner,
-                isWritable: key.isWritable,
-            }); }),
-            data: Buffer.from(instruction.data, "base64"),
-        });
-    };
-    ;
     ArbBot.prototype.getAdressLookupTableAccounts = function (keys, connection) {
         return __awaiter(this, void 0, void 0, function () {
             var addressLookupTableAccountInfos;
@@ -521,27 +688,6 @@ var ArbBot = /** @class */ (function () {
         });
     };
     ;
-    ArbBot.prototype.postTransactionProcessing = function (quote, txid) {
-        return __awaiter(this, void 0, void 0, function () {
-            var inputMint, inAmount, outputMint, outAmount;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        inputMint = quote.inputMint, inAmount = quote.inAmount, outputMint = quote.outputMint, outAmount = quote.outAmount;
-                        return [4 /*yield*/, this.updateNextTrade(quote)];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.refreshBalances()];
-                    case 2:
-                        _a.sent();
-                        return [4 /*yield*/, this.logSwap({ inputToken: inputMint, inAmount: inAmount, outputToken: outputMint, outAmount: outAmount, txId: txid, timestamp: new Date().toISOString() })];
-                    case 3:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
     return ArbBot;
 }());
 exports.ArbBot = ArbBot;

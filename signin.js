@@ -3,6 +3,8 @@
 const dotenv = require('dotenv'); // Environment variables
 const {Api} = require('telegram');
 
+dotenv.config();
+
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 

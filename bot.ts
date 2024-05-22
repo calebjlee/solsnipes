@@ -1,6 +1,6 @@
-import { Keypair, Connection, PublicKey, VersionedTransaction, LAMPORTS_PER_SOL, TransactionInstruction, AddressLookupTableAccount, TransactionMessage } from "@solana/web3.js";
+import { Keypair, Connection, PublicKey, VersionedTransaction, LAMPORTS_PER_SOL, TransactionInstruction, AddressLookupTableAccount, TransactionMessage, Transaction } from "@solana/web3.js";
 import { createJupiterApiClient, DefaultApi, ResponseError, QuoteGetRequest, QuoteResponse, Instruction, AccountMeta } from '@jup-ag/api';
-import { getAssociatedTokenAddressSync, getMint } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, getAssociatedTokenAddressSync, getMint, getAccount, } from '@solana/spl-token';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -92,7 +92,6 @@ export class ArbBot {
     private async firstTrade(): Promise<void> {
         try {
             if (this.waitingForConfirmation) {
-                console.log('Waiting for previous transaction to confirm...');
                 return;
             }
             const quote = await this.getQuote(this.nextTrade);
@@ -121,7 +120,6 @@ export class ArbBot {
                 this.lastCheck = currentTime;
                 try {
                     if (this.waitingForConfirmation) {
-                        console.log('Waiting for previous transaction to confirm...');
                         return;
                     }
                     const quote = await this.getQuote(this.nextTrade);
@@ -178,8 +176,8 @@ export class ArbBot {
         if (parseInt(quote.outAmount) > this.nextTrade.nextTradeThreshold || ((parseInt(quote.outAmount) < this.initialPrice) && curTime - this.startTime > timeBeforeExecuting)) {
             try {
                 this.waitingForConfirmation = true;
-                await this.executeSwap(quote, this.altBalance * Math.pow(10, await this.getTokenDecimals(this.initialAltMint.toBase58())));
                 await this.refreshBalances();
+                await this.executeSwap(quote, this.altBalance * Math.pow(10, await this.getTokenDecimals(this.initialAltMint.toBase58())));
                 this.terminateSession("Successfully Swapped!");
             } catch (error) {
                 console.error('Error executing swap:', error);
@@ -194,12 +192,48 @@ export class ArbBot {
             if (!Number.isInteger(roundedAmount) || roundedAmount <= 0) {
                 throw new Error('Invalid custom amount');
             }
-    
+
             // Convert the rounded amount to string and assign to route
             route.inAmount = roundedAmount.toString();
-    
+
             console.log(`Executing swap with amount: ${route.inAmount}`);
-    
+
+            const inputMint = new PublicKey(route.inputMint);
+            const outputMint = new PublicKey(route.outputMint);
+
+            // Ensure the associated token account for the output mint exists
+            await this.createTokenAccountIfMissing(this.wallet.publicKey, outputMint);
+
+            let inputTokenBalance = 0;
+
+            if (inputMint.equals(this.solMint)) {
+                const solBalance = await this.getSolBalance(this.wallet.publicKey);
+                console.log(`SOL Balance: ${solBalance / LAMPORTS_PER_SOL} SOL`);
+
+                if (solBalance < roundedAmount) {
+                    console.error(`Insufficient SOL for the swap. Required: ${roundedAmount}, Available: ${solBalance}`);
+                    throw new Error(`Insufficient SOL for the swap. Required: ${roundedAmount}, Available: ${solBalance}`);
+                }
+
+                inputTokenBalance = solBalance;
+            } else {
+                const inputTokenAccount = await this.getAssociatedTokenAccount(this.wallet.publicKey, inputMint);
+                inputTokenBalance = await this.getTokenBalance(inputTokenAccount);
+
+                console.log(`Input Token Balance for mint ${inputMint.toBase58()}: ${inputTokenBalance}`);
+
+                if (inputTokenBalance < roundedAmount) {
+                    console.error(`Insufficient funds for the swap. Required: ${roundedAmount}, Available: ${inputTokenBalance}`);
+                    throw new Error(`Insufficient funds for the swap. Required: ${roundedAmount}, Available: ${inputTokenBalance}`);
+                }
+            }
+
+            // Log input and output details
+            console.log(`Input Mint: ${inputMint.toBase58()}`);
+            console.log(`Output Mint: ${outputMint.toBase58()}`);
+            console.log(`Input Token Balance: ${inputTokenBalance}`);
+            console.log(`Rounded Amount: ${roundedAmount}`);
+
             const {
                 computeBudgetInstructions,
                 setupInstructions,
@@ -210,54 +244,60 @@ export class ArbBot {
                 swapRequest: {
                     quoteResponse: route,
                     userPublicKey: this.wallet.publicKey.toBase58(),
-                    prioritizationFeeLamports: 'auto'
+                    prioritizationFeeLamports: 'auto',
                 },
             });
-    
+
             const instructions: TransactionInstruction[] = [
                 ...computeBudgetInstructions.map(this.instructionDataToTransactionInstruction),
                 ...setupInstructions.map(this.instructionDataToTransactionInstruction),
                 this.instructionDataToTransactionInstruction(swapInstruction),
                 this.instructionDataToTransactionInstruction(cleanupInstruction),
             ].filter((ix) => ix !== null) as TransactionInstruction[];
-    
-            const addressLookupTableAccounts = await this.getAdressLookupTableAccounts(
+
+            const addressLookupTableAccounts = await this.getAddressLookupTableAccounts(
                 addressLookupTableAddresses,
                 this.solanaConnection
             );
-    
+
             const { blockhash, lastValidBlockHeight } = await this.solanaConnection.getLatestBlockhash();
-    
+
             const messageV0 = new TransactionMessage({
                 payerKey: this.wallet.publicKey,
                 recentBlockhash: blockhash,
                 instructions,
             }).compileToV0Message(addressLookupTableAccounts);
-    
+
             const transaction = new VersionedTransaction(messageV0);
             transaction.sign([this.wallet]);
-    
+
             const rawTransaction = transaction.serialize();
             const txid = await this.solanaConnection.sendRawTransaction(rawTransaction, {
                 skipPreflight: true,
-                maxRetries: 2
+                maxRetries: 2,
             });
-    
-            const confirmation = await this.solanaConnection.confirmTransaction({ signature: txid, blockhash, lastValidBlockHeight }, 'confirmed');
+
+            const confirmation = await this.solanaConnection.confirmTransaction(
+                { signature: txid, blockhash, lastValidBlockHeight },
+                'confirmed'
+            );
             if (confirmation.value.err) {
                 console.error('Transaction confirmation error:', confirmation.value.err);
-                throw new Error('Transaction failed');
+                throw new Error(`Transaction failed with error: ${JSON.stringify(confirmation.value.err)}`);
             }
-    
+
             await this.postTransactionProcessing(route, txid);
         } catch (error) {
             if (error instanceof ResponseError) {
-                console.log(await error.response.json());
+                console.error('Response error:', await error.response.json());
             } else if (error instanceof Error) {
                 if (error.message.includes('Invalid custom amount')) {
                     console.error('Custom amount error:', error.message);
                 } else if (error.message.includes('Transaction failed')) {
                     console.error('Transaction execution error:', error.message);
+                    if (error.message.includes('6018')) {
+                        console.error('Custom error 6018: Insufficient funds for the swap');
+                    }
                 } else {
                     console.error('Error during swap execution:', error);
                 }
@@ -269,10 +309,98 @@ export class ArbBot {
             this.waitingForConfirmation = false;
         }
     }
-    
-    
-    
 
+    private async createTokenAccountIfMissing(walletPublicKey: PublicKey, mint: PublicKey): Promise<void> {
+        const tokenAccount = await this.getAssociatedTokenAccount(walletPublicKey, mint);
+        const tokenAccountInfo = await this.solanaConnection.getParsedAccountInfo(tokenAccount);
+
+        if (!tokenAccountInfo.value) {
+            console.log(`Creating associated token account for mint ${mint.toBase58()}`);
+            const transaction = new Transaction().add(
+                createAssociatedTokenAccountInstruction(
+                    walletPublicKey,
+                    tokenAccount,
+                    walletPublicKey,
+                    mint,
+                    TOKEN_PROGRAM_ID,
+                    ASSOCIATED_TOKEN_PROGRAM_ID
+                )
+            );
+            await this.sendTransaction(transaction);
+        } else {
+            console.log(`Associated token account already exists for mint ${mint.toBase58()}`);
+        }
+    }
+
+    private async sendTransaction(transaction: Transaction): Promise<void> {
+        const { blockhash } = await this.solanaConnection.getRecentBlockhash();
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = this.wallet.publicKey;
+
+        transaction.sign(this.wallet);
+        const signature = await this.solanaConnection.sendRawTransaction(transaction.serialize());
+
+        await this.solanaConnection.confirmTransaction(signature, 'singleGossip');
+    }
+
+    private async getSolBalance(walletPublicKey: PublicKey): Promise<number> {
+        return await this.solanaConnection.getBalance(walletPublicKey);
+    }
+
+    private async getAssociatedTokenAccount(walletPublicKey: PublicKey, mint: PublicKey): Promise<PublicKey> {
+        return getAssociatedTokenAddressSync(mint, walletPublicKey);
+    }
+
+    private async getTokenBalance(tokenAccount: PublicKey): Promise<number> {
+        try {
+            const tokenAccountInfo = await getAccount(this.solanaConnection, tokenAccount);
+            return Number(tokenAccountInfo.amount); // Adjust if you need decimals based on token type
+        } catch (error) {
+            console.error('Error fetching token balance:', error);
+            return 0;
+        }
+    }
+
+    private instructionDataToTransactionInstruction(instruction: Instruction | undefined) {
+        if (instruction === null || instruction === undefined) return null;
+        return new TransactionInstruction({
+            programId: new PublicKey(instruction.programId),
+            keys: instruction.accounts.map((key: AccountMeta) => ({
+                pubkey: new PublicKey(key.pubkey),
+                isSigner: key.isSigner,
+                isWritable: key.isWritable,
+            })),
+            data: Buffer.from(instruction.data, 'base64'),
+        });
+    }
+
+    private async getAddressLookupTableAccounts(keys: string[], connection: Connection): Promise<AddressLookupTableAccount[]> {
+        const addressLookupTableAccountInfos = await connection.getMultipleAccountsInfo(
+            keys.map((key) => new PublicKey(key))
+        );
+
+        return addressLookupTableAccountInfos.reduce((acc, accountInfo, index) => {
+            const addressLookupTableAddress = keys[index];
+            if (accountInfo) {
+                const addressLookupTableAccount = new AddressLookupTableAccount({
+                    key: new PublicKey(addressLookupTableAddress),
+                    state: AddressLookupTableAccount.deserialize(accountInfo.data),
+                });
+                acc.push(addressLookupTableAccount);
+            }
+
+            return acc;
+        }, new Array<AddressLookupTableAccount>());
+    }
+
+    private async postTransactionProcessing(route: QuoteResponse, txid: string): Promise<void> {
+        const { inputMint, inAmount, outputMint, outAmount } = route;
+        await this.updateNextTrade(route);
+        await this.refreshBalances();
+        await this.logSwap({ inputToken: inputMint, inAmount, outputToken: outputMint, outAmount, txId: txid, timestamp: new Date().toISOString() });
+    }
+
+    
     private async refreshBalances(): Promise<void> {
         try {
             const results = await Promise.allSettled([
@@ -355,21 +483,6 @@ export class ArbBot {
         }, 1000);
     }
 
-    private instructionDataToTransactionInstruction (
-        instruction: Instruction | undefined
-    ) {
-        if (instruction === null || instruction === undefined) return null;
-        return new TransactionInstruction({
-            programId: new PublicKey(instruction.programId),
-            keys: instruction.accounts.map((key: AccountMeta) => ({
-                pubkey: new PublicKey(key.pubkey),
-                isSigner: key.isSigner,
-                isWritable: key.isWritable,
-            })),
-            data: Buffer.from(instruction.data, "base64"),
-        });
-    };
-
     private async getAdressLookupTableAccounts (
         keys: string[], connection: Connection
     ): Promise<AddressLookupTableAccount[]> {
@@ -391,11 +504,4 @@ export class ArbBot {
             return acc;
         }, new Array<AddressLookupTableAccount>());
     };
-
-    private async postTransactionProcessing(quote: QuoteResponse, txid: string): Promise<void> {
-        const { inputMint, inAmount, outputMint, outAmount } = quote;
-        await this.updateNextTrade(quote);
-        await this.refreshBalances();
-        await this.logSwap({ inputToken: inputMint, inAmount, outputToken: outputMint, outAmount, txId: txid, timestamp: new Date().toISOString() });
-    }
 }
