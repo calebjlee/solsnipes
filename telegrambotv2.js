@@ -52,7 +52,17 @@ if (!current_max_id){
 if (debug)
 console.log("Current Max Message ID: ", current_max_id);
 
+//check if token name is known to not work
+function bad_token_name(name){
+  return name.toUpperCase().trim() == "ETH" || name.toUpperCase().trim() == "BTC"
+}
+
 async function handleMessage(text){
+
+  //don't trade if it is ETH
+  if (text.toUpperCase().indexOf("ETH") >= 0){
+    return -1;
+  }
 
   if (debug)
   console.log("Received Message...");
@@ -147,7 +157,7 @@ async function handleMessage(text){
       console.log("BUY? ", raw_results[1].response.text().trim());
   }
 
-  if (latest_data?.buy && latest_data?.token_name){
+  if (latest_data?.buy && latest_data?.token_name && !bad_token_name(latest_data?.token_name)){
       if (debug) console.log("Attempting to trade: " + latest_data.token_name);
       if (trade){
           runTrader(latest_data.token_name + "/SOL").catch(console.error);
@@ -194,7 +204,10 @@ async function main(){
           await client.sendMessage(DEBUG_CHANNEL_ID, { message: "Responded to message with id: " +  current_max_id + " by attempting to trade, BUT --TRADE WAS NOT ENABLED!"});
           break;
         case 0:
-          await client.sendMessage(DEBUG_CHANNEL_ID, { message: "Responded to message with id: " +  current_max_id + " by NOT trading!"});
+          await client.sendMessage(DEBUG_CHANNEL_ID, { message: "Responded to message with id: " +  current_max_id + " by NOT trading due to message contents!"});
+          break;
+        case -1:
+          await client.sendMessage(DEBUG_CHANNEL_ID, { message: "Responded to message with id: " +  current_max_id + " by NOT trading due to being ETH related!"});
           break;
       }
 
