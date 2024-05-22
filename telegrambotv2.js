@@ -34,9 +34,11 @@ const apiHash = process.env.API_HASH;
 const stringSession = new StringSession(process.env.TELEGRAM_SESSION);
 
 const CHECK_FREQUENCY = 5000; //how often to see if there is a new message (milliseconds)
-const TARGET_CHAT_ID = -1002138178253;
+const TARGET_CHAT_ID = -1002094405795;
 //Lyxe Calls ID: -1002138178253
 //Testing Channel ID: -1002094405795;
+
+const DEBUG_CHANNEL_ID = -1002096140973;
 
 const redis_client = await createClient({
   url: process.env.REDIS_URL
@@ -52,7 +54,17 @@ if (!current_max_id){
 if (debug)
 console.log("Current Max Message ID: ", current_max_id);
 
+//check if token name is known to not work
+function bad_token_name(name){
+  return name.toUpperCase().trim() == "ETH" || name.toUpperCase().trim() == "BTC"
+}
+
 async function handleMessage(text){
+
+  //don't trade if it is ETH
+  if (text.toUpperCase().indexOf("ETH") >= 0){
+    return -1;
+  }
 
   if (debug)
   console.log("Received Message...");
@@ -134,7 +146,7 @@ async function handleMessage(text){
   }
   catch(e){
     console.log("BREAKING OUT");
-    return;
+    return 0;
   }
   if (debug) console.timeEnd("AI Part");
   
@@ -147,16 +159,19 @@ async function handleMessage(text){
       console.log("BUY? ", raw_results[1].response.text().trim());
   }
 
-  if (latest_data?.buy && latest_data?.token_name){
+  if (latest_data?.buy && latest_data?.token_name && !bad_token_name(latest_data?.token_name)){
       if (debug) console.log("Attempting to trade: " + latest_data.token_name);
       if (trade){
           runTrader(latest_data.token_name + "/SOL").catch(console.error);
+          return 2;
       }
       else{
           console.log("Would have traded " +  latest_data.token_name + ", but --trade setting not enabled.");
+          return 1;
       }
   }
   if (debug) console.log("Finished reacting to message.")
+  return 0;
 }
 
 
@@ -182,7 +197,23 @@ async function main(){
       let original_message_obj = await client.getMessages(TARGET_CHAT_ID, {minId: original_id - 1, maxId: original_id + 1});
       raw_text = "Original Message:\n" + original_message_obj[0].message + "\nNew Update:\n" + raw_text; 
     }
-    handleMessage(raw_text);
+    handleMessage(raw_text).then(async (outcome) => {
+      switch (outcome){
+        case 2:
+          await client.sendMessage(DEBUG_CHANNEL_ID, { message: "Responded to message with id: " +  current_max_id + " by attempting to trade!"});
+          break;
+        case 1:
+          await client.sendMessage(DEBUG_CHANNEL_ID, { message: "Responded to message with id: " +  current_max_id + " by attempting to trade, BUT --TRADE WAS NOT ENABLED!"});
+          break;
+        case 0:
+          await client.sendMessage(DEBUG_CHANNEL_ID, { message: "Responded to message with id: " +  current_max_id + " by NOT trading due to message contents!"});
+          break;
+        case -1:
+          await client.sendMessage(DEBUG_CHANNEL_ID, { message: "Responded to message with id: " +  current_max_id + " by NOT trading due to being ETH related!"});
+          break;
+      }
+
+    });
     current_max_id += messages.length;
     await redis_client.set(TARGET_CHAT_ID + '.CURRENT_MAX_ID', current_max_id);
   }, CHECK_FREQUENCY);
