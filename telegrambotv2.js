@@ -32,7 +32,7 @@ const apiHash = process.env.API_HASH;
 const stringSession = new StringSession(process.env.TELEGRAM_SESSION);
 
 const CHECK_FREQUENCY = 5000; //how often to see if there is a new message (milliseconds)
-const TARGET_CHAT_ID = -1002094405795;
+const TARGET_CHAT_ID = -1002138178253;
 //Lyxe Calls ID: -1002138178253
 //Testing Channel ID: -1002094405795;
 
@@ -183,7 +183,7 @@ async function main(){
   console.log("Connected!");
 
   setInterval(async () => {
-    const messages = await client.getMessages(TARGET_CHAT_ID, {minId: current_max_id, maxId: current_max_id + 2})
+    const messages = await client.getMessages(TARGET_CHAT_ID, {minId: current_max_id, maxId: current_max_id * 100})
     if (debug) console.log("New messages: ", messages.length);
     if (messages.length <= 0){
       return;
