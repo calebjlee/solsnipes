@@ -13,7 +13,7 @@ Using historical data from DexScreener, we observed that 100% of the time an inf
 - **Entry & Exit Strategy:** 
   - **Buy Trigger:** Buy immediately on the first advertisement.
   - **Profit Target:** Sell at 20% profit.
-  - **Loss Mitigation:** If the price dips back to the buy price within 1 minute, the trade is exited at breakeven.
+  - **Loss Mitigation:** If the price dips back to the buy price after 1 minute, the trade is exited at breakeven.
   - **Holding Period:** Hold the position for at least 1 minute after the initial buy.
 
 **Manual Data Analysis**: I manually reviewed hundreds of trades using DexScreener due to anti-automation measures that prevented effective web scraping. Each trade was assumed under the worst conditions, where the initial buy occurred on the next minute after the advertisement, and any wick crossing the initial buy price within the first minute triggered a sell at breakeven. Profits were only taken if there was a period longer than one minute where the price stayed above 20%.
@@ -33,10 +33,8 @@ A Monte Carlo simulation on the tracked data also indicated that this strategy w
 While our backtest proved successful, the real-world implementation had several challenges:
 
 - **Transaction Time**: Using the QuickNode API, we executed real trades on the Solana blockchain. However, trades weren’t instantaneous (approximately 15 seconds delay), unlike competitors using dedicated Solana trading bots.
-- **Liquidity Issues**: Market sell orders often suffered from slippage due to low liquidity in altcoins, reducing the actual profits.
+- **Liquidity Issues**: Market sell orders often suffered from slippage due to low liquidity in altcoins, reducing actual profits.
 - **Overhead Costs**: AWS EC2 server costs and QuickNode API expenses added operational overhead, making profitability difficult without risking a larger amount of capital.
-
-Ultimately, while we believe in the potential of our strategy, we encourage others to experiment with this tool at their own risk.
 
 ## 🔧 Tech Stack
 
