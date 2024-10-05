@@ -1,12 +1,12 @@
 # solsnipes
 
-# 🚀 Influencer Cryptocurrency Trading Bot
+# 🚀 Algorithmic Cryptocurrency News Trading Bot
 
 Our strategy leverages large, popular Influencer Cryptocurrency Telegram channels with audiences in the tens of thousands. These channels attract impulsive buyers who tend to follow trends on Solana altcoins—known for their high volatility. Due to the low liquidity of these altcoins, prices can undergo substantial fluctuations, presenting unique trading opportunities.
 
 ## 📊 Strategy Overview
 
-Using historical data from DexScreener, we observed that 100% of the time an influencer advertised an altcoin, its price would rise for a short period. However, over 90% of the time, these coins would eventually crash below their initial advertisement price. Based on this pattern, we developed a low-risk strategy to take advantage of these price movements.
+Using historical data from DexScreener, we observed that 100% of the time an influencer advertised an altcoin, its price would rise for a short period. However, a majority of the time, these coins would eventually crash below their initial advertisement price. Based on this pattern, we developed a low-risk strategy to take advantage of these price movements.
 
 - **Data Source:** 2.5 months of historical data from a popular influencer's Telegram channel.
 - **Sentiment Analysis:** Using the Gemini 1.5 Flash model, we performed sentiment analysis on all messages from the target influencer to detect when they positively advertised a coin.
